@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הזמנת ברזל זיון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Archivo:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --steel-950:#15181c;
+    --steel-900:#1c2127;
+    --steel-800:#242a32;
+    --steel-700:#2f3741;
+    --steel-600:#454f5c;
+    --steel-300:#9aa5b1;
+    --steel-200:#c3cad2;
+    --steel-100:#e8ebee;
+    --paper:#f2f4f6;
+    --safety:#f26b1d;
+    --safety-dark:#d4540a;
+    --safety-soft:#fde8db;
+    --ok:#1e7f4f;
+    --ok-soft:#dcf2e6;
+    --danger:#b3261e;
+    --danger-soft:#fbe3e1;
+    --radius:6px;
+    --font-he:'Heebo',system-ui,sans-serif;
+    --font-num:'Archivo','Heebo',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font-he);
+    background:var(--paper);
+    color:var(--steel-950);
+    line-height:1.55;
+    min-height:100vh;
+  }
+  /* ---------- Auth gate ---------- */
+  #authGate{
+    position:fixed;inset:0;z-index:200;
+    background:
+      repeating-linear-gradient(-45deg,transparent 0 18px,rgba(242,107,29,.05) 18px 20px),
+      linear-gradient(160deg,var(--steel-900),var(--steel-950));
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .auth-card{
+    background:#fff;border-radius:10px;border-top:5px solid var(--safety);
+    padding:36px;width:100%;max-width:400px;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .auth-card .logo-mark{margin:0 auto 14px}
+  .auth-card h2{text-align:center;font-size:1.3rem;font-weight:800}
+  .auth-card .sub{text-align:center;color:var(--steel-600);font-size:.85rem;margin:4px 0 22px}
+  .auth-card .field{margin-bottom:14px}
+  .auth-card .btn{width:100%;justify-content:center;margin-top:6px}
+  .auth-switch{
+    display:block;text-align:center;margin-top:16px;font-size:.85rem;
+    color:var(--safety);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:600;
+  }
+  .auth-switch:hover{text-decoration:underline}
+
+  :focus-visible{outline:3px solid var(--safety);outline-offset:2px;border-radius:2px}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--steel-950);
+    color:#fff;
+    border-bottom:4px solid var(--safety);
+    position:sticky;top:0;z-index:50;
+  }
+  .header-inner{
+    max-width:1180px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-mark{
+    width:44px;height:44px;flex:none;
+    background:var(--safety);
+    display:grid;place-items:center;
+    clip-path:polygon(0 0,100% 0,100% 70%,70% 100%,0 100%);
+  }
+  .logo-mark svg{width:26px;height:26px}
+  .logo-text{display:flex;flex-direction:column;line-height:1.15}
+  .logo-text strong{font-size:1.05rem;font-weight:800;letter-spacing:.01em}
+  .logo-text span{font-size:.75rem;color:var(--steel-300);font-weight:400}
+  header nav{margin-inline-start:auto;display:flex;gap:4px}
+  header nav a{
+    color:var(--steel-200);text-decoration:none;font-size:.9rem;font-weight:500;
+    padding:8px 14px;border-radius:var(--radius);
+  }
+  header nav a:hover{background:var(--steel-800);color:#fff}
+  header nav a.active{background:var(--safety);color:#fff}
+
+  /* ---------- Hero strip ---------- */
+  .hero{
+    background:
+      repeating-linear-gradient(-45deg,transparent 0 18px,rgba(242,107,29,.06) 18px 20px),
+      linear-gradient(160deg,var(--steel-900),var(--steel-950));
+    color:#fff;
+    padding:56px 24px 64px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;inset-inline:0;bottom:0;height:10px;
+    background:repeating-linear-gradient(-45deg,var(--safety) 0 24px,var(--steel-950) 24px 48px);
+  }
+  .hero-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1.3fr .7fr;gap:40px;align-items:end}
+  .hero h1{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;line-height:1.15}
+  .hero p{margin-top:12px;color:var(--steel-200);max-width:52ch;font-size:1.05rem}
+  .hero-stats{display:flex;gap:32px}
+  .stat{border-inline-start:3px solid var(--safety);padding-inline-start:14px}
+  .stat b{display:block;font-family:var(--font-num);font-size:1.8rem;font-weight:800;color:var(--safety)}
+  .stat span{font-size:.82rem;color:var(--steel-300)}
+
+  /* ---------- Layout ---------- */
+  main{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:start}
+
+  section.panel{
+    background:#fff;
+    border:1px solid var(--steel-100);
+    border-top:4px solid var(--steel-950);
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow:0 1px 2px rgba(21,24,28,.05);
+  }
+  .panel h2{font-size:1.25rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+  .panel h2 .tag{
+    font-family:var(--font-num);font-size:.7rem;font-weight:700;color:#fff;
+    background:var(--steel-950);padding:2px 8px;border-radius:3px;
+  }
+  .panel .sub{color:var(--steel-600);font-size:.88rem;margin-bottom:22px}
+
+  /* ---------- Form ---------- */
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  label{font-size:.85rem;font-weight:600}
+  label small{font-weight:400;color:var(--steel-600)}
+  input,select,textarea{
+    font-family:inherit;font-size:.95rem;
+    padding:10px 12px;
+    border:1.5px solid var(--steel-200);
+    border-radius:var(--radius);
+    background:#fff;color:var(--steel-950);
+    width:100%;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--safety);outline:none;box-shadow:0 0 0 3px var(--safety-soft)}
+  input.err,select.err{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
+  .err-msg{color:var(--danger);font-size:.78rem;min-height:1em}
+
+  .diameter-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .diameter-grid input{position:absolute;opacity:0;pointer-events:none}
+  .dia-chip{
+    font-family:var(--font-num);font-weight:700;font-size:.85rem;
+    border:1.5px solid var(--steel-200);border-radius:var(--radius);
+    padding:7px 13px;cursor:pointer;background:#fff;color:var(--steel-600);
+    transition:border-color .15s,background .15s;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .dia-chip:hover{border-color:var(--steel-600)}
+  .diameter-grid input:checked + .dia-chip{
+    background:var(--steel-950);color:#fff;border-color:var(--steel-950);
+  }
+  .diameter-grid input:checked + .dia-chip::before{
+    content:"";width:8px;height:8px;border-radius:50%;background:var(--safety);
+  }
+  .diameter-grid input:focus-visible + .dia-chip{outline:3px solid var(--safety);outline-offset:2px}
+
+  .weight-hint{
+    display:flex;align-items:center;gap:10px;
+    background:var(--steel-100);border-radius:var(--radius);
+    padding:10px 14px;font-size:.85rem;margin-bottom:16px;
+  }
+  .weight-hint b{font-family:var(--font-num)}
+
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+  .btn{
+    font-family:inherit;font-size:.95rem;font-weight:700;
+    padding:12px 26px;border-radius:var(--radius);border:none;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:transform .1s,background .15s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--safety);color:#fff}
+  .btn-primary:hover{background:var(--safety-dark)}
+  .btn-ghost{background:transparent;color:var(--steel-600);border:1.5px solid var(--steel-200)}
+  .btn-ghost:hover{border-color:var(--steel-600);color:var(--steel-950)}
+
+  /* ---------- Cart / summary ---------- */
+  .cart-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .cart-item{
+    display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+    border:1px solid var(--steel-100);border-radius:var(--radius);padding:12px 14px;
+    background:var(--paper);
+  }
+  .cart-item .dia-badge{
+    font-family:var(--font-num);font-weight:800;font-size:.8rem;
+    background:var(--steel-950);color:#fff;border-radius:4px;padding:5px 9px;
+    min-width:52px;text-align:center;
+  }
+  .cart-item .meta{font-size:.85rem}
+  .cart-item .meta b{font-family:var(--font-num)}
+  .cart-item .meta span{color:var(--steel-600)}
+  .cart-item .remove{
+    background:none;border:none;cursor:pointer;color:var(--steel-300);
+    padding:6px;border-radius:4px;line-height:0;
+  }
+  .cart-item .remove:hover{color:var(--danger);background:var(--danger-soft)}
+  .cart-total{
+    border-top:2px solid var(--steel-950);padding-top:14px;margin-top:4px;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .cart-total b{font-family:var(--font-num);font-size:1.5rem;font-weight:800}
+  .cart-total b small{font-size:.85rem;font-weight:500;color:var(--steel-600)}
+  .empty{
+    text-align:center;padding:32px 12px;color:var(--steel-600);font-size:.9rem;
+    border:1.5px dashed var(--steel-200);border-radius:var(--radius);
+  }
+  .empty svg{width:40px;height:40px;margin-bottom:8px;opacity:.5}
+
+  /* ---------- Orders history ---------- */
+  #orders-section{margin-top:40px}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th{
+    text-align:start;font-size:.75rem;font-weight:700;color:var(--steel-600);
+    border-bottom:2px solid var(--steel-950);padding:8px 10px;
+  }
+  td{padding:12px 10px;border-bottom:1px solid var(--steel-100);vertical-align:middle}
+  td.num{font-family:var(--font-num);font-weight:700}
+  .status{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:99px;
+    background:var(--ok-soft);color:var(--ok);
+  }
+  .status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .row-actions{display:flex;gap:6px}
+  .icon-btn{
+    background:none;border:1px solid var(--steel-200);border-radius:4px;cursor:pointer;
+    padding:5px 8px;font-size:.75rem;font-weight:600;color:var(--steel-600);font-family:inherit;
+  }
+  .icon-btn:hover{border-color:var(--steel-950);color:var(--steel-950)}
+  .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(50%) translateY(80px);
+    background:var(--steel-950);color:#fff;padding:13px 22px;border-radius:var(--radius);
+    font-size:.9rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);
+    opacity:0;transition:transform .25s ease,opacity .25s ease;pointer-events:none;z-index:100;
+    border-inline-start:4px solid var(--safety);
+  }
+  #toast.show{transform:translateX(50%) translateY(0);opacity:1}
+
+  footer{
+    background:var(--steel-950);color:var(--steel-300);
+    text-align:center;padding:20px;font-size:.8rem;margin-top:60px;
+  }
+
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .hero-inner{grid-template-columns:1fr;gap:24px}
+    .form-row{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none!important;animation:none!important}
+    html{scroll-behavior:auto}
+  }
+  @media print{
+    header,footer,.hero,main,#toast{display:none!important}
+    body{background:#fff}
+    #printReport{display:block!important}
+  }
+  /* ---------- Print report (PDF) ---------- */
+  #printReport{display:none;color:#000;font-family:var(--font-he)}
+  .pr-header{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:20px;
+  }
+  .pr-title h1{font-size:22pt;font-weight:900;line-height:1.2}
+  .pr-title .pr-sub{font-size:10pt;color:#444;margin-top:2px}
+  .pr-meta{text-align:left;font-size:9pt;color:#333;line-height:1.7}
+  .pr-meta b{font-family:var(--font-num)}
+  .pr-summary{
+    display:flex;gap:0;border:1.5px solid #000;margin-bottom:24px;
+  }
+  .pr-summary div{flex:1;padding:10px 14px;border-inline-start:1.5px solid #000}
+  .pr-summary div:first-child{border-inline-start:none}
+  .pr-summary b{display:block;font-family:var(--font-num);font-size:15pt}
+  .pr-summary span{font-size:8.5pt;color:#444}
+  .pr-order{margin-bottom:22px;break-inside:avoid}
+  .pr-order-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    background:#eceff1;border:1px solid #999;border-bottom:none;
+    padding:6px 12px;font-size:10pt;font-weight:700;
+  }
+  .pr-order-head .pr-id{font-family:var(--font-num)}
+  .pr-order table{width:100%;border-collapse:collapse;font-size:9pt}
+  .pr-order th{
+    border:1px solid #999;background:#fff;padding:4px 8px;
+    font-size:8pt;color:#333;text-align:start;
+  }
+  .pr-order td{border:1px solid #999;padding:4px 8px;text-align:start}
+  .pr-order td.num{font-family:var(--font-num)}
+  .pr-order .pr-notes{font-size:8.5pt;color:#333;padding:5px 12px;border:1px solid #999;border-top:none}
+  .pr-total-row td{font-weight:800;background:#eceff1}
+  .pr-footer{
+    margin-top:32px;display:flex;justify-content:space-between;gap:40px;
+    font-size:9pt;
+  }
+  .pr-sign{flex:1;border-top:1px solid #000;padding-top:6px;margin-top:36px}
+  .pr-sign span{color:#555;font-size:8pt}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="auth-card">
+    <div class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <path d="M4 20 20 4M4 4l4 4M20 20l-4-4"/>
+      </svg>
+    </div>
+    <h2 id="authTitle">כניסה למערכת</h2>
+    <p class="sub" id="authSub">מערכת הזמנות ברזל · נדרשת התחברות</p>
+    <form id="authForm" novalidate>
+      <div class="field">
+        <label for="authEmail">אימייל</label>
+        <input type="email" id="authEmail" dir="ltr" placeholder="name@company.com" autocomplete="email">
+        <span class="err-msg" data-for="authEmail"></span>
+      </div>
+      <div class="field">
+        <label for="authPass">סיסמה</label>
+        <input type="password" id="authPass" dir="ltr" placeholder="••••••••" autocomplete="current-password">
+        <span class="err-msg" data-for="authPass"></span>
+      </div>
+      <button type="submit" class="btn btn-primary" id="authBtn">כניסה</button>
+    </form>
+    <button class="auth-switch" id="authSwitch">אין לכם חשבון? הרשמה</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M4 20 20 4M4 4l4 4M20 20l-4-4"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <strong>הזמנות ברזל זיון</strong>
+        <span>Rebar Ordering System</span>
+      </div>
+    </div>
+    <nav>
+      <a href="#order-form" class="active">הזמנה חדשה</a>
+      <a href="#projects-section">פרויקטים</a>
+      <a href="#orders-section">היסטוריית הזמנות</a>
+      <a href="#" id="logoutLink">יציאה</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>הזמנת ברזל זיון לאתר</h1>
+      <p>טופס הזמנה פנימי למהנדסי האתר. בחרו קטרים, אורכים וכמויות — המשקל מחושב אוטומטית לפי תקן ישראל 4466, וההזמנה נשמרת להמשך טיפול ברכש.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <b id="stat-orders">0</b>
+        <span>הזמנות פתוחות</span>
+      </div>
+      <div class="stat">
+        <b id="stat-weight">0</b>
+        <span>ק"ג בהזמנות</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="grid">
+
+    <!-- Order form -->
+    <section class="panel" id="order-form">
+      <h2>פרטי ההזמנה <span class="tag">טופס 12-ב</span></h2>
+      <p class="sub">שדות המסומנים ב־* הם חובה. ניתן להוסיף כמה סוגי ברזל לאותה הזמנה.</p>
+
+      <form id="orderForm" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label for="engineer">שם המהנדס *</label>
+            <input type="text" id="engineer" name="engineer" placeholder="למשל: דוד כהן" autocomplete="name">
+            <span class="err-msg" data-for="engineer"></span>
+          </div>
+          <div class="field">
+            <label for="site">אתר / פרויקט *</label>
+            <select id="site" name="site"></select>
+            <span class="err-msg" data-for="site"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field full">
+            <label>סוג פריט *</label>
+            <div class="diameter-grid" id="itemTypeGrid" role="radiogroup" aria-label="סוג פריט"></div>
+          </div>
+        </div>
+
+        <div class="form-row" id="barsBlock">
+          <div class="field full">
+            <label>קוטר ברזל (מ"מ) *</label>
+            <div class="diameter-grid" id="diameterGrid" role="radiogroup" aria-label="קוטר ברזל"></div>
+            <span class="err-msg" data-for="diameter"></span>
+          </div>
+        </div>
+
+        <div class="form-row" id="meshBlock" hidden>
+          <div class="field">
+            <label>סוג רשת *</label>
+            <div class="diameter-grid" id="meshTypeGrid" role="radiogroup" aria-label="סוג רשת"></div>
+            <span class="err-msg" data-for="meshType"></span>
+          </div>
+          <div class="field">
+            <label>קוטר חוט (מ"מ) *</label>
+            <div class="diameter-grid" id="wireGrid" role="radiogroup" aria-label="קוטר חוט"></div>
+            <span class="err-msg" data-for="wire"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field" id="lengthField">
+            <label for="length">אורך מוט (מטר) *</label>
+            <input type="number" id="length" name="length" min="1" max="18" step="0.5" placeholder="12">
+            <span class="err-msg" data-for="length"></span>
+          </div>
+          <div class="field">
+            <label for="quantity" id="quantityLabel">כמות מוטות *</label>
+            <input type="number" id="quantity" name="quantity" min="1" step="1" placeholder="50">
+            <span class="err-msg" data-for="quantity"></span>
+          </div>
+        </div>
+
+        <div class="weight-hint" id="weightHint" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7h12l2 13H4L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+          משקל משוער לשורה זו: <b id="lineWeight">0 ק"ג</b>&nbsp;(<span id="kgPerM"></span>)
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="deliveryDate">תאריך אספקה מבוקש *</label>
+            <input type="date" id="deliveryDate" name="deliveryDate">
+            <span class="err-msg" data-for="deliveryDate"></span>
+          </div>
+          <div class="field">
+            <label for="bending">כיפוף / שיוך <small>(אופציונלי)</small></label>
+            <select id="bending" name="bending">
+              <option value="">מוטות ישרים</option>
+              <option>זוויות / חיכוכים</option>
+              <option>קשתות</option>
+              <option>לפי שרטוט כיפוף (מצורף)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field full">
+            <label for="notes">הערות לאתר / לרכש</label>
+            <textarea id="notes" name="notes" rows="2" placeholder="הנחיות פריקה, שעות קבלה, איש קשר באתר…"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-ghost" id="addLineBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            הוספת שורה להזמנה
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+            שליחת הזמנה לרכש
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Cart -->
+    <section class="panel" aria-label="סיכום הזמנה נוכחית">
+      <h2>סיכום הזמנה</h2>
+      <p class="sub">שורות שנוספו להזמנה הנוכחית.</p>
+      <div class="cart-list" id="cartList">
+        <div class="empty" id="cartEmpty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 20 20 4M4 4l4 4M20 20l-4-4"/></svg>
+          <div>עדיין לא נוספו שורות.<br>בחרו קוטר, אורך וכמות ולחצו "הוספת שורה".</div>
+        </div>
+      </div>
+      <div class="cart-total" id="cartTotalWrap" hidden>
+        <span>משקל כולל</span>
+        <b id="cartTotal">0 <small>ק"ג</small></b>
+      </div>
+    </section>
+  </div>
+
+  <!-- Projects -->
+  <section class="panel" id="projects-section" style="margin-top:40px">
+    <h2>ניהול פרויקטים</h2>
+    <p class="sub">הפרויקטים שמוגדרים כאן יופיעו ברשימת האתרים בטופס ההזמנה.</p>
+    <form id="projectForm" novalidate>
+      <div class="form-row">
+        <div class="field">
+          <label for="projName">שם הפרויקט *</label>
+          <input type="text" id="projName" placeholder="למשל: גשר נחל תנינים">
+          <span class="err-msg" data-for="projName"></span>
+        </div>
+        <div class="field">
+          <label for="projLocation">מיקום <small>(אופציונלי)</small></label>
+          <input type="text" id="projLocation" placeholder="למשל: חיפה">
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" id="projSubmitBtn">הוספת פרויקט</button>
+        <button type="button" class="btn btn-ghost" id="projCancelBtn" hidden>ביטול עריכה</button>
+      </div>
+    </form>
+    <div style="overflow-x:auto;margin-top:24px">
+      <table id="projectsTable">
+        <thead>
+          <tr><th>שם הפרויקט</th><th>מיקום</th><th>הזמנות</th><th></th></tr>
+        </thead>
+        <tbody id="projectsBody"></tbody>
+      </table>
+      <div class="empty" id="projectsEmpty" style="margin-top:16px">אין פרויקטים עדיין. הוסיפו את הפרויקט הראשון למעלה.</div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section class="panel" id="orders-section">
+    <h2>היסטוריית הזמנות</h2>
+    <p class="sub">ההזמנות נשמרות במכשיר זה. ניתן לייצא לקובץ Excel (XLSX) או ל־PDF.</p>
+    <div style="overflow-x:auto">
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>מס' הזמנה</th>
+            <th>תאריך</th>
+            <th>מהנדס</th>
+            <th>אתר</th>
+            <th>שורות</th>
+            <th>משקל (ק"ג)</th>
+            <th>אספקה</th>
+            <th>סטטוס</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody"></tbody>
+      </table>
+      <div class="empty" id="ordersEmpty" style="margin-top:16px">אין הזמנות שמורות עדיין.</div>
+    </div>
+    <div class="actions" style="margin-top:20px">
+      <button class="btn btn-ghost" id="exportXlsxBtn">ייצוא Excel (XLSX)</button>
+      <button class="btn btn-ghost" id="exportPdfBtn">ייצוא PDF</button>
+      <button class="btn btn-ghost" id="clearBtn" style="color:var(--danger)">מחיקת כל ההזמנות</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  מערכת הזמנות ברזל פנימית · גרסה 1.0
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div id="printReport" aria-hidden="true"></div>
+
+<script>
+// kg per meter per bar diameter (mm), from "טבלת משקלים של מוטות"
+const KG_PER_M = {6:0.222, 8:0.395, 10:0.617, 12:0.888, 14:1.212, 16:1.58, 18:2.0, 20:2.47, 22:2.98, 25:3.85, 28:4.83, 32:6.31, 36:7.98};
+const DIAMETERS = Object.keys(KG_PER_M).map(Number);
+// kg per mesh sheet (2500x6000 mm), from "טבלת משקלים של רשתות"
+const MESH = {
+  '200/200': {5.5:29, 6:34, 6.5:40, 7:46.5, 7.5:53.1, 8:61},
+  '150/150': {5.5:38, 6:45, 6.5:53, 7:61, 7.5:70.1, 8:80},
+  '100/100': {5.5:56.1, 6:66.6, 6.5:78, 7:90.6, 7.5:104.1, 8:118.8}
+};
+const MESH_TYPES = Object.keys(MESH);
+const MESH_WIRES = Object.keys(MESH['200/200']).map(Number);
+const ITEM_TYPES = [['bars', 'מוטות זיון'], ['mesh', 'רשתות']];
+const LS_KEY = 'eba_iron_orders';
+const PROJ_KEY = 'eba_projects';
+
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('he-IL', {maximumFractionDigits: 1});
+
+function lsGet(key){
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+  catch (e){ return []; }
+}
+function lsSet(key, val){
+  try { localStorage.setItem(key, JSON.stringify(val)); }
+  catch (e){ toast('הדפדפן חוסם אחסון מקומי — הנתונים לא יישמרו'); }
+}
+
+/* ===== Supabase cloud config =====
+   1. Create a free project at https://supabase.com
+   2. In SQL Editor run the setup script in SUPABASE_SETUP.sql (next to this file)
+   3. Paste your Project URL and anon public key below
+   While these are empty the app works locally only (localStorage). */
+const SUPABASE_URL = 'https://wjfkuhzknanmvaojxulu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZmt1aHprbmFubXZhb2p4dWx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NTQyNzksImV4cCI6MjEwNTMzMDI3OX0.Q01kMVn9Hsw5gL1vkMvrFRKjIDVWTJa6xeljC5ZXJWE';
+const sb = (SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let cloudUser = null;
+
+async function cloudLoad(){
+  const {data: ords} = await sb.from('orders').select('data').order('created_at', {ascending: false});
+  if (ords){ orders = ords.map(r => r.data); lsSet(LS_KEY, orders); }
+  const {data: projs} = await sb.from('projects').select('*');
+  if (projs){ projects = projs.map(p => ({id: p.id, name: p.name, location: p.location})); lsSet(PROJ_KEY, projects); }
+}
+function cloudSyncOrders(){
+  if (!sb || !cloudUser) return;
+  sb.from('orders').upsert(orders.map(o => ({id: o.id, user_id: cloudUser.id, data: o})))
+    .then(({error}) => { if (error) toast('שגיאת סנכרון ענן'); });
+}
+function cloudDeleteOrder(id){
+  if (!sb || !cloudUser) return;
+  sb.from('orders').delete().eq('id', id).then(() => {});
+}
+function cloudSyncProjects(){
+  if (!sb || !cloudUser) return;
+  sb.from('projects').upsert(projects.map(p => ({id: p.id, user_id: cloudUser.id, name: p.name, location: p.location || ''})))
+    .then(({error}) => { if (error) toast('שגיאת סנכרון ענן'); });
+}
+function cloudDeleteProject(id){
+  if (!sb || !cloudUser) return;
+  sb.from('projects').delete().eq('id', id).then(() => {});
+}
+
+let cart = [];
+let orders = lsGet(LS_KEY);
+let projects = lsGet(PROJ_KEY);
+let editingProjectId = null;
+
+function buildChips(container, name, items, labelFn){
+  items.forEach(val => {
+    const id = name + String(val).replace(/[./]/g, '-');
+    const inp = document.createElement('input');
+    inp.type = 'radio'; inp.name = name; inp.id = id; inp.value = val;
+    // clicking the already-selected chip deselects it (click may land on the label)
+    inp.addEventListener('click', () => {
+      if (buildChips._last[name] === inp.value){
+        inp.checked = false;
+        buildChips._last[name] = null;
+        inp.dispatchEvent(new Event('change', {bubbles: true}));
+      } else {
+        buildChips._last[name] = inp.value;
+      }
+    });
+    const lbl = document.createElement('label');
+    lbl.className = 'dia-chip'; lbl.htmlFor = id; lbl.textContent = labelFn(val);
+    container.append(inp, lbl);
+  });
+}
+
+buildChips($('diameterGrid'), 'diameter', DIAMETERS, d => 'Ø' + d);
+buildChips($('itemTypeGrid'), 'itemType', ITEM_TYPES.map(t => t[0]), v => ITEM_TYPES.find(t => t[0] === v)[1]);
+buildChips($('meshTypeGrid'), 'meshType', MESH_TYPES, t => 'רשת ' + t);
+buildChips($('wireGrid'), 'wire', MESH_WIRES, w => 'Ø' + w);
+buildChips._last = {};
+document.querySelector('input[name="itemType"][value="bars"]').checked = true;
+buildChips._last['itemType'] = 'bars';
+
+function itemType(){
+  const el = document.querySelector('input[name="itemType"]:checked');
+  return el ? el.value : 'bars';
+}
+function selectedRadio(name){
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+const selectedDiameter = () => { const v = selectedRadio('diameter'); return v ? Number(v) : null; };
+
+function lineWeight(){
+  const q = parseInt($('quantity').value);
+  if (!q) return null;
+  if (itemType() === 'mesh'){
+    const t = selectedRadio('meshType'), w = selectedRadio('wire');
+    if (!t || !w) return null;
+    return MESH[t][w] * q;
+  }
+  const d = selectedDiameter(), l = parseFloat($('length').value);
+  if (!d || !l) return null;
+  return KG_PER_M[d] * l * q;
+}
+
+function updateHint(){
+  const w = lineWeight();
+  $('weightHint').hidden = w === null;
+  if (w !== null){
+    $('lineWeight').textContent = fmt(w) + ' ק"ג';
+    $('kgPerM').textContent = itemType() === 'mesh'
+      ? fmt(MESH[selectedRadio('meshType')][selectedRadio('wire')]) + ' ק"ג ליחידה (2500×6000 מ"מ)'
+      : KG_PER_M[selectedDiameter()] + ' ק"ג/מ\'';
+  }
+}
+
+$('itemTypeGrid').addEventListener('change', () => {
+  const mesh = itemType() === 'mesh';
+  $('barsBlock').hidden = mesh;
+  $('meshBlock').hidden = !mesh;
+  $('lengthField').hidden = mesh;
+  $('quantityLabel').textContent = mesh ? 'כמות יחידות (יח׳ 2500×6000 מ"מ) *' : 'כמות מוטות *';
+  setErr('diameter', ''); setErr('meshType', ''); setErr('wire', ''); setErr('length', '');
+  updateHint();
+});
+
+['length','quantity'].forEach(id => $(id).addEventListener('input', updateHint));
+['diameterGrid','meshTypeGrid','wireGrid'].forEach(id => $(id).addEventListener('change', updateHint));
+
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function setErr(name, msg){
+  const el = document.querySelector(`.err-msg[data-for="${name}"]`);
+  if (el) el.textContent = msg || '';
+  const input = name === 'diameter' ? null : $(name);
+  if (input) input.classList.toggle('err', !!msg);
+}
+
+function validateLine(){
+  let ok = true;
+  const q = parseInt($('quantity').value);
+  if (itemType() === 'mesh'){
+    const t = selectedRadio('meshType'), w = selectedRadio('wire');
+    setErr('meshType', t ? '' : 'בחרו סוג רשת');
+    setErr('wire', w ? '' : 'בחרו קוטר חוט');
+    if (!t || !w) ok = false;
+  } else {
+    const d = selectedDiameter();
+    const l = parseFloat($('length').value);
+    setErr('diameter', d ? '' : 'בחרו קוטר');
+    if (!d) ok = false;
+    setErr('length', (!l || l < 1 || l > 18) ? 'אורך בין 1 ל-18 מטר' : '');
+    if (!l || l < 1 || l > 18) ok = false;
+  }
+  setErr('quantity', (!q || q < 1) ? 'כמות של לפחות יחידה אחת' : '');
+  if (!q || q < 1) ok = false;
+  return ok;
+}
+
+$('addLineBtn').addEventListener('click', () => {
+  if (!validateLine()) return;
+  const base = {quantity: parseInt($('quantity').value), weight: lineWeight()};
+  cart.push(itemType() === 'mesh'
+    ? {type: 'mesh', meshType: selectedRadio('meshType'), wire: Number(selectedRadio('wire')), ...base}
+    : {type: 'bars', diameter: selectedDiameter(), length: parseFloat($('length').value), ...base});
+  renderCart();
+  $('length').value = ''; $('quantity').value = '';
+  updateHint();
+  toast('השורה נוספה להזמנה');
+});
+
+function lineType(l){ return l.type || (l.diameter ? 'bars' : 'mesh'); }
+function lineBadge(l){ return lineType(l) === 'mesh' ? 'רשת' : 'Ø' + l.diameter; }
+function lineDesc(l){
+  return lineType(l) === 'mesh'
+    ? `רשתות: רשת ${l.meshType} · חוט Ø${l.wire} מ"מ`
+    : `מוטות זיון: Ø${l.diameter} מ"מ × ${l.length} מ'`;
+}
+
+function renderCart(){
+  const list = $('cartList');
+  list.innerHTML = '';
+  if (!cart.length){
+    list.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 20 20 4M4 4l4 4M20 20l-4-4"/></svg>
+      <div>עדיין לא נוספו שורות.<br>בחרו סוג פריט וכמות ולחצו "הוספת שורה".</div>
+    </div>`;
+  } else {
+    cart.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <span class="dia-badge">${lineBadge(item)}</span>
+        <div class="meta">
+          <span>${lineDesc(item)} ·</span> <b>${item.quantity}</b> <span>${lineType(item) === 'mesh' ? 'יחידות' : 'מוטות'} ·</span> <b>${fmt(item.weight)}</b> <span>ק"ג</span>
+        </div>
+        <button class="remove" aria-label="הסרת שורה" data-i="${i}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>`;
+      list.appendChild(div);
+    });
+  }
+  const total = cart.reduce((s, x) => s + x.weight, 0);
+  $('cartTotalWrap').hidden = !cart.length;
+  $('cartTotal').innerHTML = fmt(total) + ' <small>ק"ג</small>';
+  $('submitBtn').disabled = !cart.length;
+}
+
+$('cartList').addEventListener('click', e => {
+  const btn = e.target.closest('.remove');
+  if (!btn) return;
+  cart.splice(Number(btn.dataset.i), 1);
+  renderCart();
+});
+
+// Min delivery date = tomorrow
+const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+$('deliveryDate').min = tomorrow.toISOString().slice(0, 10);
+
+$('orderForm').addEventListener('submit', e => {
+  e.preventDefault();
+  let ok = true;
+  const eng = $('engineer').value.trim();
+  const site = $('site').value;
+  const date = $('deliveryDate').value;
+  setErr('engineer', eng ? '' : 'שדה חובה'); if (!eng) ok = false;
+  setErr('site', site ? '' : 'בחרו אתר'); if (!site) ok = false;
+  setErr('deliveryDate', date ? '' : 'בחרו תאריך אספקה'); if (!date) ok = false;
+  if (!cart.length){ toast('הוסיפו לפחות שורה אחת להזמנה'); return; }
+  if (!ok) return;
+
+  const order = {
+    id: 'ORD-' + String(Date.now()).slice(-6),
+    created: new Date().toISOString().slice(0, 10),
+    engineer: eng,
+    site,
+    delivery: date,
+    bending: $('bending').value,
+    notes: $('notes').value.trim(),
+    lines: cart,
+    totalWeight: cart.reduce((s, x) => s + x.weight, 0),
+    status: 'נשלחה לרכש'
+  };
+  orders.unshift(order);
+  save();
+  cart = [];
+  renderCart();
+  e.target.reset();
+  updateHint();
+  toast(`הזמנה ${order.id} נשלחה לרכש`);
+  $('orders-section').scrollIntoView({behavior: 'smooth'});
+});
+
+function save(){
+  lsSet(LS_KEY, orders);
+  cloudSyncOrders();
+  renderOrders();
+}
+
+function renderOrders(){
+  const body = $('ordersBody');
+  body.innerHTML = '';
+  $('ordersEmpty').style.display = orders.length ? 'none' : 'block';
+  $('ordersTable').style.display = orders.length ? 'table' : 'none';
+  orders.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${o.id}</td>
+      <td class="num">${o.created}</td>
+      <td>${escapeHtml(o.engineer)}</td>
+      <td>${escapeHtml(o.site)}</td>
+      <td class="num">${o.lines.length}</td>
+      <td class="num">${fmt(o.totalWeight)}</td>
+      <td class="num">${o.delivery}</td>
+      <td><span class="status">${o.status}</span></td>
+      <td class="row-actions">
+        <button class="icon-btn" data-act="pdf" data-id="${o.id}">PDF</button>
+        <button class="icon-btn" data-act="xlsx" data-id="${o.id}">XLSX</button>
+        <button class="icon-btn" data-act="dup" data-id="${o.id}">שכפול</button>
+        <button class="icon-btn danger" data-act="del" data-id="${o.id}">מחיקה</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+  $('stat-orders').textContent = orders.length;
+  $('stat-weight').textContent = fmt(orders.reduce((s, o) => s + o.totalWeight, 0));
+}
+
+$('ordersBody').addEventListener('click', e => {
+  const btn = e.target.closest('.icon-btn');
+  if (!btn) return;
+  const o = orders.find(x => x.id === btn.dataset.id);
+  if (!o) return;
+  if (btn.dataset.act === 'del'){
+    orders = orders.filter(x => x.id !== btn.dataset.id);
+    save();
+    cloudDeleteOrder(btn.dataset.id);
+    toast('ההזמנה נמחקה');
+  } else if (btn.dataset.act === 'dup'){
+    cart = o.lines.map(l => ({...l}));
+    renderCart();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    toast('השורות שוכפלו לטופס — הושלמו פרטים ושלחו');
+  } else if (btn.dataset.act === 'xlsx'){
+    exportXlsx([o], `order-${o.id}.xlsx`);
+  } else if (btn.dataset.act === 'pdf'){
+    buildPrintReport([o]);
+    window.print();
+  }
+});
+
+function reportRows(list){
+  const rows = [['מס הזמנה','תאריך','מהנדס','אתר','אספקה','סוג','מפרט','כמות','משקל שורה (ק"ג)','הערות']];
+  list.forEach(o => o.lines.forEach(l =>
+    rows.push([o.id, o.created, o.engineer, o.site, o.delivery,
+      lineType(l) === 'mesh' ? 'רשת' : 'מוטות', lineDesc(l), l.quantity,
+      Number(l.weight.toFixed(1)), o.notes || ''])
+  ));
+  return rows;
+}
+
+function exportXlsx(list, filename){
+  if (typeof XLSX === 'undefined'){ toast('ספריית Excel לא נטענה — בדקו חיבור לאינטרנט'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(reportRows(list));
+  ws['!cols'] = [{wch:12},{wch:12},{wch:16},{wch:24},{wch:12},{wch:12},{wch:10},{wch:8},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws, 'הזמנות ברזל');
+  const summary = XLSX.utils.aoa_to_sheet([
+    ['סיכום'],
+    ['מספר הזמנות', list.length],
+    ['משקל כולל (ק"ג)', Number(list.reduce((s, o) => s + o.totalWeight, 0).toFixed(1))],
+    ['תאריך הפקה', new Date().toISOString().slice(0, 10)]
+  ]);
+  XLSX.utils.book_append_sheet(wb, summary, 'סיכום');
+  XLSX.writeFile(wb, filename);
+  toast('קובץ ה־Excel ירד למחשב');
+}
+
+$('exportXlsxBtn').addEventListener('click', () => {
+  if (!orders.length){ toast('אין הזמנות לייצוא'); return; }
+  exportXlsx(orders, 'iron-orders.xlsx');
+});
+
+function buildPrintReport(list){
+  const single = list.length === 1;
+  const totalW = list.reduce((s, o) => s + o.totalWeight, 0);
+  const totalLines = list.reduce((s, o) => s + o.lines.length, 0);
+  const today = new Date().toLocaleDateString('he-IL');
+  const bySite = {};
+  list.forEach(o => { bySite[o.site] = (bySite[o.site] || 0) + o.totalWeight; });
+  const topSites = Object.entries(bySite).sort((a, b) => b[1] - a[1]).slice(0, 3)
+    .map(([s, w]) => `${escapeHtml(s)} (${fmt(w)} ק"ג)`).join(' · ') || '—';
+
+  const ordersHtml = list.map(o => `
+    <div class="pr-order">
+      <div class="pr-order-head">
+        <span><span class="pr-id">${o.id}</span> · ${escapeHtml(o.site)}</span>
+        <span>${escapeHtml(o.engineer)} · הוזמנה ${o.created} · אספקה ${o.delivery}${o.bending ? ' · ' + escapeHtml(o.bending) : ''}</span>
+      </div>
+      <table>
+        <thead><tr><th>מפרט</th><th>כמות</th><th>משקל שורה</th></tr></thead>
+        <tbody>
+          ${o.lines.map(l => `<tr>
+            <td>${escapeHtml(lineDesc(l))}</td>
+            <td class="num">${l.quantity} ${lineType(l) === 'mesh' ? "יח'" : 'מוטות'}</td>
+            <td class="num">${fmt(l.weight)} ק"ג</td>
+          </tr>`).join('')}
+          <tr class="pr-total-row"><td colspan="2">סה"כ להזמנה</td><td class="num">${fmt(o.totalWeight)} ק"ג</td></tr>
+        </tbody>
+      </table>
+      ${o.notes ? `<div class="pr-notes">הערות: ${escapeHtml(o.notes)}</div>` : ''}
+    </div>`).join('');
+
+  $('printReport').innerHTML = `
+    <div class="pr-header">
+      <div class="pr-title">
+        <h1>${single ? 'הזמנת ברזל זיון — ' + list[0].id : 'דוח הזמנות ברזל זיון'}</h1>
+        <div class="pr-sub">מערכת הזמנות פנימית · הופק אוטומטית</div>
+      </div>
+      <div class="pr-meta">
+        תאריך הפקה: <b>${today}</b><br>
+        מספר הזמנות: <b>${list.length}</b>
+      </div>
+    </div>
+    <div class="pr-summary">
+      <div><b>${list.length}</b><span>הזמנות</span></div>
+      <div><b>${totalLines}</b><span>שורות סה"כ</span></div>
+      <div><b>${fmt(totalW)}</b><span>ק"ג סה"כ</span></div>
+      <div><b>${fmt(totalW / 1000)}</b><span>טון</span></div>
+    </div>
+    ${single ? '' : `<div style="font-size:9pt;color:#333;margin-bottom:16px">פרויקטים מרכזיים: ${topSites}</div>`}
+    ${ordersHtml}
+    <div class="pr-footer">
+      <div class="pr-sign">חתימת מהנדס<br><span>שם וחתימה</span></div>
+      <div class="pr-sign">אישור רכש<br><span>שם וחתימה</span></div>
+    </div>`;
+}
+
+$('exportPdfBtn').addEventListener('click', () => {
+  if (!orders.length){ toast('אין הזמנות לייצוא'); return; }
+  buildPrintReport(orders);
+  window.print();
+});
+
+$('clearBtn').addEventListener('click', () => {
+  if (!orders.length) return;
+  if (confirm('למחוק את כל ההזמנות השמורות? לא ניתן לשחזר.')){
+    orders = [];
+    save();
+    if (sb && cloudUser) sb.from('orders').delete().eq('user_id', cloudUser.id).then(() => {});
+    toast('כל ההזמנות נמחקו');
+  }
+});
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- Projects ---------- */
+function saveProjects(){
+  lsSet(PROJ_KEY, projects);
+  cloudSyncProjects();
+  renderProjects();
+  populateSites();
+}
+
+function populateSites(){
+  const sel = $('site');
+  const current = sel.value;
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = projects.length ? 'בחרו אתר…' : 'אין פרויקטים — הוסיפו ב"ניהול פרויקטים"';
+  sel.appendChild(ph);
+  projects.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    opt.textContent = p.location ? `${p.name} — ${p.location}` : p.name;
+    sel.appendChild(opt);
+  });
+  if (projects.some(p => p.name === current)) sel.value = current;
+}
+
+function renderProjects(){
+  const body = $('projectsBody');
+  body.innerHTML = '';
+  $('projectsEmpty').style.display = projects.length ? 'none' : 'block';
+  $('projectsTable').style.display = projects.length ? 'table' : 'none';
+  projects.forEach(p => {
+    const count = orders.filter(o => o.site === p.name).length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.location || '—')}</td>
+      <td class="num">${count}</td>
+      <td class="row-actions">
+        <button class="icon-btn" data-act="edit" data-id="${p.id}">עריכה</button>
+        <button class="icon-btn danger" data-act="del" data-id="${p.id}">מחיקה</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+}
+
+function resetProjectForm(){
+  editingProjectId = null;
+  $('projectForm').reset();
+  $('projSubmitBtn').textContent = 'הוספת פרויקט';
+  $('projCancelBtn').hidden = true;
+  setErr('projName', '');
+}
+
+$('projectForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('projName').value.trim();
+  const location = $('projLocation').value.trim();
+  const dup = projects.some(p => p.name === name && p.id !== editingProjectId);
+  setErr('projName', !name ? 'שדה חובה' : dup ? 'פרויקט בשם זה כבר קיים' : '');
+  if (!name || dup) return;
+  if (editingProjectId){
+    const p = projects.find(x => x.id === editingProjectId);
+    p.name = name; p.location = location;
+    toast('הפרויקט עודכן');
+  } else {
+    projects.push({id: 'P' + Date.now(), name, location});
+    toast('הפרויקט נוסף');
+  }
+  resetProjectForm();
+  saveProjects();
+});
+
+$('projCancelBtn').addEventListener('click', resetProjectForm);
+
+$('projectsBody').addEventListener('click', e => {
+  const btn = e.target.closest('.icon-btn');
+  if (!btn) return;
+  const p = projects.find(x => x.id === btn.dataset.id);
+  if (!p) return;
+  if (btn.dataset.act === 'edit'){
+    editingProjectId = p.id;
+    $('projName').value = p.name;
+    $('projLocation').value = p.location || '';
+    $('projSubmitBtn').textContent = 'שמירת שינויים';
+    $('projCancelBtn').hidden = false;
+    $('projName').focus();
+  } else if (btn.dataset.act === 'del'){
+    const count = orders.filter(o => o.site === p.name).length;
+    const msg = count
+      ? `לפרויקט "${p.name}" יש ${count} הזמנות שמורות. למחוק בכל זאת? ההזמנות יישארו.`
+      : `למחוק את הפרויקט "${p.name}"?`;
+    if (confirm(msg)){
+      projects = projects.filter(x => x.id !== p.id);
+      if (editingProjectId === p.id) resetProjectForm();
+      saveProjects();
+      cloudDeleteProject(p.id);
+      toast('הפרויקט נמחק');
+    }
+  }
+});
+
+/* ---------- Auth ---------- */
+const USERS_KEY = 'eba_users';
+const SESSION_KEY = 'eba_session';
+let authMode = 'login';
+
+async function hashPass(s){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function setAuthMode(mode){
+  authMode = mode;
+  const reg = mode === 'register';
+  $('authTitle').textContent = reg ? 'יצירת חשבון' : 'כניסה למערכת';
+  $('authSub').textContent = reg ? 'החשבון נשמר במכשיר זה בלבד' : 'מערכת הזמנות ברזל · נדרשת התחברות';
+  $('authBtn').textContent = reg ? 'הרשמה' : 'כניסה';
+  $('authSwitch').textContent = reg ? 'יש לכם חשבון? כניסה' : 'אין לכם חשבון? הרשמה';
+  setErr('authEmail', ''); setErr('authPass', '');
+}
+
+function showGate(){
+  $('authGate').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setAuthMode(lsGet(USERS_KEY).length ? 'login' : 'register');
+  setTimeout(() => $('authEmail').focus(), 50);
+}
+function hideGate(){
+  $('authGate').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+$('authSwitch').addEventListener('click', () => setAuthMode(authMode === 'login' ? 'register' : 'login'));
+
+$('authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('authEmail').value.trim().toLowerCase();
+  const pass = $('authPass').value;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  setErr('authEmail', emailOk ? '' : 'הזינו כתובת אימייל תקינה');
+  setErr('authPass', pass.length >= 6 ? '' : 'סיסמה של 6 תווים לפחות');
+  if (!emailOk || pass.length < 6) return;
+
+  if (sb){
+    $('authBtn').disabled = true;
+    try {
+      if (authMode === 'register'){
+        const {error} = await sb.auth.signUp({email, password: pass});
+        if (error){ setErr('authPass', translateAuthError(error.message)); return; }
+        toast('החשבון נוצר. אם התקבל מייל אימות — אשרו אותו ואז התחברו');
+        setAuthMode('login');
+        return;
+      }
+      const {data, error} = await sb.auth.signInWithPassword({email, password: pass});
+      if (error){
+        setErr('authPass', /email not confirmed/i.test(error.message)
+          ? 'האימייל טרם אושר — בדקו את תיבת המייל (גם בספאם) ולחצו על קישור האימות'
+          : 'אימייל או סיסמה שגויים');
+        return;
+      }
+      cloudUser = data.user;
+      await cloudLoad();
+      renderOrders(); renderProjects(); populateSites();
+      hideGate();
+      toast('ברוכים הבאים — הנתונים מסונכרנים לענן');
+      $('authForm').reset();
+    } finally {
+      $('authBtn').disabled = false;
+    }
+    return;
+  }
+
+  // local-only mode (no Supabase configured)
+  const users = lsGet(USERS_KEY);
+  const hash = await hashPass(pass);
+  if (authMode === 'register'){
+    if (users.some(u => u.email === email)){ setErr('authEmail', 'האימייל כבר רשום — עברו לכניסה'); return; }
+    users.push({email, hash});
+    lsSet(USERS_KEY, users);
+  } else {
+    const u = users.find(u => u.email === email);
+    if (!u || u.hash !== hash){ setErr('authPass', 'אימייל או סיסמה שגויים'); return; }
+  }
+  sessionStorage.setItem(SESSION_KEY, email);
+  hideGate();
+  toast(authMode === 'register' ? 'החשבון נוצר — ברוכים הבאים' : 'ברוכים הבאים');
+  $('authForm').reset();
+});
+
+function translateAuthError(msg){
+  if (/already registered/i.test(msg)) return 'האימייל כבר רשום — עברו לכניסה';
+  if (/password/i.test(msg)) return 'הסיסמה חלשה מדי';
+  return 'שגיאה: ' + msg;
+}
+
+$('logoutLink').addEventListener('click', async e => {
+  e.preventDefault();
+  if (sb) await sb.auth.signOut();
+  sessionStorage.removeItem(SESSION_KEY);
+  cloudUser = null;
+  showGate();
+  toast('יצאתם מהמערכת');
+});
+
+(async function init(){
+  if (sb){
+    const {data: {session}} = await sb.auth.getSession();
+    if (session){
+      cloudUser = session.user;
+      await cloudLoad();
+      hideGate();
+    } else {
+      showGate();
+    }
+  } else if (sessionStorage.getItem(SESSION_KEY)) hideGate();
+  else showGate();
+  renderCart();
+  renderOrders();
+  renderProjects();
+  populateSites();
+})();
+</script>
+</body>
+</html>
